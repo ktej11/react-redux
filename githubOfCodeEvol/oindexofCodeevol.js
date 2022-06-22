@@ -50,32 +50,7 @@ const initialIceCreamState = {
   numOfIceCreams: 20
 }
 
-// const reducer = (state = initialState, action) => {
-//   switch (action.type) {
-//     case CAKE_ORDERED:
-//       return {
-//         ...state,
-//         numOfCakes: state.numOfCakes - 1
-//       }
-//     case CAKE_RESTOCKED:
-//       return {
-//         ...state,
-//         numOfCakes: state.numOfCakes + action.payload
-//       }
-//     case ICECREAM_ORDERED:
-//       return {
-//         ...state,
-//         numOfIceCreams: state.numOfIceCreams - 1
-//       }
-//     case ICECREAM_RESTOCKED:
-//       return {
-//         ...state,
-//         numOfIceCreams: state.numOfIceCreams + action.payload
-//       }
-//     default:
-//       return state
-//   }
-// }
+
 
 const cakeReducer = (state = initialCakeState, action) => {
   switch (action.type) {
