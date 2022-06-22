@@ -1,68 +1,81 @@
-//any additional info u want to send we use word payload
 const redux = require('redux')
-
+const thunkMiddleware = require('redux-thunk').default
+const axios = require('axios')
 const createStore = redux.createStore
-const bindActionCreators = redux.bindActionCreators
-const combineReducers = redux.combineReducers
+const applyMiddleware = redux.applyMiddleware
 
-const CAKE_ORDERED = 'CAKE_ORDERED'
-const CAKE_RESTOCKED = 'CAKE_RESTOCKED'
+const initialState = {
+    loading: false,
+    users: [],
+    error: ''
+}
 
-function orderCake(qty = 1) {
+const FETCH_USERS_REQUESTED = 'FETCH_USERS_REQUESTED'
+const FETCH_USERS_SUCCEEDED = 'FETCH_USERS_SUCCEEDED'
+const FETCH_USERS_FAILED = 'FETCH_USERS_FAILED'
+
+const fetchUsersRequest = () => {
     return {
-        type: CAKE_ORDERED,
-        payload: qty
+        type: FETCH_USERS_REQUESTED
     }
 }
-function restockCake(qty = 1) {
+
+const fetchUsersSuccess = users => {
     return {
-        type: CAKE_RESTOCKED,
-        payload: qty
+        type: FETCH_USERS_SUCCEEDED,
+        payload: users
     }
 }
 
-const initialCakeState = {
-    numOfCakes: 10
+const fetchUsersFailure = error => {
+    return {
+        type: FETCH_USERS_FAILED,
+        payload: error
+    }
 }
 
-const cakeReducer = (state = initialCakeState, action) => {
+const fetchUsers = () => {
+    return function (dispatch) {
+        dispatch(fetchUsersRequest())
+        axios
+            .get('https://jsonplaceholder.typicode.com/users')
+            .then(response => {
+                // response.data is the users
+                const users = response.data.map(user => user.id)
+                dispatch(fetchUsersSuccess(users))
+            })
+            .catch(error => {
+                // error.message is the error message
+                dispatch(fetchUsersFailure(error.message))
+            })
+    }
+}
+
+const reducer = (state = initialState, action) => {
+    console.log(action.type)
     switch (action.type) {
-        case CAKE_ORDERED:
+        case FETCH_USERS_REQUESTED:
             return {
                 ...state,
-                numOfCakes: state.numOfCakes - 1
+                loading: true
             }
-        case CAKE_RESTOCKED:
+        case FETCH_USERS_SUCCEEDED:
             return {
-                ...state,
-                numOfCakes: state.numOfCakes + action.payload
+                loading: false,
+                users: action.payload,
+                error: ''
             }
-        default:
-            return state
+        case FETCH_USERS_FAILED:
+            return {
+                loading: false,
+                users: [],
+                error: action.payload
+            }
     }
 }
 
-const rootReducer = combineReducers({
-    cake: cakeReducer,
+const store = createStore(reducer, applyMiddleware(thunkMiddleware))
+store.subscribe(() => {
+    console.log(store.getState())
 })
-
-const store = createStore(rootReducer)
-
-console.log('Initial State ', store.getState())
-// const unsubscribe =
-const unsubscribe = store.subscribe(() => {
-    console.log('Updated State ', store.getState())
-})
-
-const actions = bindActionCreators(
-    { orderCake, restockCake },
-    store.dispatch
-)
-
-store.dispatch(orderCake())
-actions.orderCake()
-actions.orderCake()
-actions.orderCake()
-actions.restockCake(1)
-
-unsubscribe()
+store.dispatch(fetchUsers())
